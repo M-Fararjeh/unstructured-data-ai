@@ -1,18 +1,21 @@
 <!--
 Sync Impact Report
-- Version change: (unset/template) → 1.0.0
+- Version change: 1.0.0 → 1.1.0
 - Modified principles:
-  - [PRINCIPLE_1_NAME] → I. Modular Architecture
-  - [PRINCIPLE_2_NAME] → II. Clean Code
-  - [PRINCIPLE_3_NAME] → III. Secure Development
-  - [PRINCIPLE_4_NAME] → IV. Documented Requirements & Measurable Acceptance
-  - [PRINCIPLE_5_NAME] → V. Mandatory Verification (Unit, Integration, E2E)
+  - VII. Definition of Done → expanded with additive production-readiness
+    completion criteria (items 8–9); items 1–7 preserved unchanged in intent
 - Added sections:
-  - VI. Traceability (as Core Principle)
-  - VII. Definition of Done (as Core Principle)
-  - Quality Gates & Independent Review
-  - Multi-Agent Development
-- Removed sections: none (placeholders replaced)
+  - Production Readiness
+    - Environment Management
+    - Database Migrations, Backups, Restore & Rollback
+    - Observability & Operations
+    - Release Management
+    - Non-Functional Requirements
+    - Mandatory Technical Documentation
+- Removed sections: none
+- Existing principles I–VI and sections Quality Gates & Independent Review,
+  Multi-Agent Development, Governance: preserved; Governance compliance
+  bullets expanded to reference production readiness
 - Follow-up TODOs: none
 -->
 
@@ -107,6 +110,12 @@ A task, story, or pull request is complete ONLY when all of the following hold:
 6. Independent review has approved the change
 7. Traceability links from requirement to implementation and test evidence are
    present and reviewable
+8. Production Readiness obligations applicable to the change (environments,
+   data/migration safety, observability, release controls, NFRs, and mandatory
+   documentation) are satisfied
+9. Deployment or release of the change follows Release Management rules,
+   including approvals and a verified rollback path when the change is
+   releasable
 
 No task MAY be marked complete based on implementation alone.
 
@@ -141,6 +150,85 @@ one's own implementation as fully verified is forbidden. Agents MUST NOT
 start coding outside an approved specification, MUST NOT invent business
 requirements, and MUST escalate ambiguity rather than guess.
 
+## Production Readiness
+
+Production readiness governs how software is operated, released, and sustained.
+These rules ADD to—and MUST NOT weaken—Core Principles, quality gates, or
+security requirements. Where a change touches runtime behavior, data, APIs,
+or deployment, the applicable subsections below are mandatory.
+
+### Environment Management
+The project MUST maintain distinct Development, Staging, and Production
+environments with isolated configuration, credentials, and data. Environment
+promotion MUST be unidirectional for releases (Development → Staging →
+Production) unless an explicitly approved emergency procedure documents
+otherwise. Production data MUST NOT be used in Development; if masked or
+anonymized subsets are required for Staging, the sanitization method MUST be
+documented and approved. Environment-specific settings MUST be externalized
+(not hard-coded); secrets remain subject to Secure Development. Changes MUST
+be validated in Staging before Production deployment.
+
+### Database Migrations, Backups, Restore & Rollback
+Schema and data migrations MUST be versioned, reviewable, and applicable in
+order through automated, repeatable procedures. Migrations MUST be tested in
+non-production environments before Production. Every migration MUST have a
+documented rollback or forward-fix strategy that has been validated where
+technically feasible. Automated backups MUST exist for Production (and for
+Staging when it holds non-ephemeral data), with documented retention.
+Restore procedures MUST be documented and periodically verified; an untested
+backup does not satisfy this requirement. Destructive data operations require
+explicit approval and a restore point.
+
+### Observability & Operations
+Applications MUST emit structured logs suitable for search and correlation,
+without logging secrets or sensitive payloads beyond approved policy.
+Monitoring MUST cover service health and critical dependency signals.
+Health-check endpoints (or equivalent probes) MUST distinguish liveness and
+readiness where the runtime model supports it. Error tracking MUST capture
+actionable failure telemetry with enough context to diagnose without
+weakening security or privacy controls. Alerts for Production-impacting
+failures MUST be defined for critical paths; silent Production failure is
+unacceptable.
+
+### Release Management
+Releases MUST use explicit semantic versioning for shippable artifacts and
+record what changed (version, commit/tag, environment, approver). Deployment
+to Staging and Production MUST require documented approval from a role other
+than the sole implementer. Production deployment is forbidden when required
+CI quality gates are red or when Staging validation for the release candidate
+has not succeeded. Every releasable change MUST have a documented, tested
+rollback procedure (previous artifact/version and/or data rollback/forward-fix
+as applicable). Hotfixes remain subject to security, verification, and
+traceability obligations; process compression MUST NOT omit rollback planning
+or independent approval.
+
+### Non-Functional Requirements
+Performance, scalability, reliability, and availability requirements that
+apply to a feature or service MUST be documented as measurable criteria
+(targets, thresholds, or SLOs) before the related work is accepted as done.
+Changes that can affect those properties MUST include verification evidence
+appropriate to risk (benchmarks, load tests, chaos/failover drills, or
+equivalent). Capacity and scaling assumptions MUST be explicit. Reliability
+mechanisms (timeouts, retries with backoff, idempotency where required,
+degradation behavior) MUST be designed deliberately—not left as accidental
+defaults. Availability expectations for Production MUST be stated; work that
+reduces availability below documented targets MUST NOT ship without an
+approved exception.
+
+### Mandatory Technical Documentation
+The following documentation MUST be kept current for in-scope deliverables:
+- Technical documentation describing architecture, modules, key flows, and
+  operational constraints
+- API documentation for every externally or cross-module consumable interface
+  (contracts, errors, auth, versioning/compatibility notes)
+- Deployment documentation covering environments, build/release steps,
+  configuration, migrations, health checks, monitoring/alerts, and rollback
+
+Documentation updates are part of Definition of Done for changes that alter
+behavior, interfaces, or operations. Undocumented Production behavior is a
+defect. Agents MUST NOT invent business requirements in documentation; they
+MUST reflect approved specs and implemented reality.
+
 ## Governance
 
 This constitution supersedes conflicting informal practices. All specifications,
@@ -161,7 +249,10 @@ Compliance review expectations:
   alignment
 - CI and independent review are enforcement points for verification and
   security principles
+- Production readiness (environments, data safety, observability, release
+  controls, NFRs, and mandatory documentation) MUST be checked for releasable
+  and operationally impactful changes
 - Exceptions require written justification, time-boxed duration, and explicit
   approver identity; undocumented exceptions are invalid
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-09 | **Last Amended**: 2026-10-09
+**Version**: 1.1.0 | **Ratified**: 2026-10-09 | **Last Amended**: 2026-10-09
